@@ -6,8 +6,6 @@ from typing import ClassVar, SupportsFloat
 
 @dataclass(frozen=True, slots=True)
 class CounterFloat:
-    """Liczba zmiennoprzecinkowa z globalnym licznikiem operacji arytmetycznych."""
-
     value: float
     additions: ClassVar[int] = 0
     subtractions: ClassVar[int] = 0

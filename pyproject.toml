@@ -11,10 +11,15 @@ dependencies = [
     "matplotlib>=3.11.2",
     "numba>=0.68.0",
     "numpy>=2.5.4",
+    "pandas>=3.1.0",
 ]
 
 [project.scripts]
-matrix-algorithms = "matrix_algorithms:main"
+binet = "src.matrix_algorithms.lab1.binet:main"
+strassen = "src.matrix_algorithms.lab1.strassen:main"
+laderman = "src.matrix_algorithms.lab1.laderman:main"
+benchmark = "scripts.benchmark:main"
+plot_results = "scripts.plot:main"
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]

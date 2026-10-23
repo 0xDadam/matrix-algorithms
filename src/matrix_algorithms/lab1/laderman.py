@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-
+import time
 import numpy as np
 
 from src.matrix_algorithms.core import Matrix, random_matrix, zero_matrix
@@ -77,7 +77,6 @@ def _laderman_power_of_three(left: Matrix, right: Matrix) -> Matrix:
 
 
 def laderman_multiply(left: Matrix, right: Matrix) -> Matrix:
-    """Mnoży dwie kwadratowe macierze dowolnego rozmiaru metodą Ladermana."""
     if left.ndim != 2 or right.ndim != 2 or left.shape != right.shape:
         raise ValueError("Macierze muszą być niepuste i mieć ten sam rozmiar.")
     size = len(left)
@@ -95,18 +94,25 @@ def laderman_multiply(left: Matrix, right: Matrix) -> Matrix:
     return _laderman_power_of_three(padded_left, padded_right)[:size, :size]
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("size", type=int, help="rozmiar kwadratowych macierzy")
-    parser.add_argument("--seed", type=int, default=None)
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Mnożenie macierzy metodą Ladermana")
+    parser.add_argument("size", type=int, help="Rozmiar kwadratowych macierzy N x N")
+    parser.add_argument("seed", type=int, nargs="?", default=None, help="Seed generatora")
     args = parser.parse_args()
 
+    A = random_matrix(args.size, args.seed)
+    seed_B = args.seed + 1 if args.seed is not None else None
+    B = random_matrix(args.size, seed_B)
+
     CounterFloat.reset_counter()
-    laderman_multiply(
-        random_matrix(args.size, args.seed),
-        random_matrix(
-            args.size,
-            args.seed + 1 if args.seed is not None else None,
-        ),
-    )
-    print(CounterFloat.operation_counts())
+    start_time = time.perf_counter()
+    _ = laderman_multiply(A, B)
+    elapsed = time.perf_counter() - start_time
+
+    print(f"=== Laderman ({args.size}x{args.size}) ===")
+    print(f"Czas: {elapsed:.6f} s")
+    print(f"FLOP: {CounterFloat.operation_counts()}")
+
+
+if __name__ == "__main__":
+    main()
