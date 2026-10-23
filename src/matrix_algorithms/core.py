@@ -42,3 +42,19 @@ def pad_to_power_of_two(A: Matrix, B: Matrix) -> tuple[Matrix, Matrix, int]:
     padded_B[:m_b, :p] = B
 
     return padded_A, padded_B, target_size
+
+def pad_to_power_of_three(A: Matrix, B: Matrix) -> tuple[Matrix, Matrix, int]:
+    n, m = A.shape
+    m_b, p = B.shape
+    max_dim = max(n, m, m_b, p)
+    
+    target_size = 1
+    while target_size < max_dim:
+        target_size *= 3
+
+    padded_A = zero_matrix(target_size)
+    padded_B = zero_matrix(target_size)
+    padded_A[:n, :m] = A
+    padded_B[:m_b, :p] = B
+
+    return padded_A, padded_B, target_size

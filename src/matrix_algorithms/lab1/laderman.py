@@ -4,7 +4,7 @@ import argparse
 import time
 import numpy as np
 
-from src.matrix_algorithms.core import Matrix, random_matrix, zero_matrix
+from src.matrix_algorithms.core import Matrix, random_matrix, zero_matrix, pad_to_power_of_three
 from src.matrix_algorithms.counterfloat import CounterFloat
 
 
@@ -83,13 +83,7 @@ def laderman_multiply(left: Matrix, right: Matrix) -> Matrix:
     if size == 0 or left.shape[1] != size:
         raise ValueError("Macierze muszą być kwadratowe.")
 
-    padded_size = 1
-    while padded_size < size:
-        padded_size *= 3
-    padded_left = zero_matrix(padded_size)
-    padded_right = zero_matrix(padded_size)
-    padded_left[:size, :size] = left
-    padded_right[:size, :size] = right
+    padded_left, padded_right, _ = pad_to_power_of_three(left, right)
 
     return _laderman_power_of_three(padded_left, padded_right)[:size, :size]
 
