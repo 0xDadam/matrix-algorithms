@@ -70,7 +70,8 @@ def main() -> None:
                     })
                     f.flush()
 
-                    print(f"  {name:10s} | Czas: {elapsed:8.4f} s | FLOP: {counts['total']:,}")
+                    print(f"  {name:10s} | Czas: {elapsed:8.4f} s | FLOP: {counts['total']:,} \
+                          | ADD: {counts['additions']} | SUB: {counts['subtractions']} | MULT: {counts['multiplications']}")
 
                     if elapsed > args.timeout:
                         print(f"  [!] {name} przekroczył limit czasu {args.timeout}s. Zatracanie wyższych rozmiarów dla tego algorytmu.")

@@ -2,8 +2,8 @@ import argparse
 import time
 import numpy as np
 
-from src.matrix_algorithms.core import Matrix, pad_to_power_of_two, random_matrix
-from src.matrix_algorithms.counterfloat import CounterFloat
+from ..core import Matrix, pad_to_power_of_two, random_matrix
+from ..counterfloat import CounterFloat
 
 
 def strassen_multiplication(A: Matrix, B: Matrix) -> Matrix:
