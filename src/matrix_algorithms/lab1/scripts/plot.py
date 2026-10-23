@@ -17,7 +17,6 @@ def main() -> None:
     os.makedirs(args.output_dir, exist_ok=True)
     df = pd.read_csv(args.input)
 
-    # 1. Wykres: Czas działania od rozmiaru macierzy
     plt.figure(figsize=(9, 6))
     for algo in df["algorithm"].unique():
         sub_df = df[df["algorithm"] == algo]
@@ -33,7 +32,6 @@ def main() -> None:
     plt.savefig(time_plot_path, dpi=300)
     plt.close()
 
-    # 2. Wykres: Liczba operacji zmiennoprzecinkowych od rozmiaru macierzy
     plt.figure(figsize=(9, 6))
     for algo in df["algorithm"].unique():
         sub_df = df[df["algorithm"] == algo]

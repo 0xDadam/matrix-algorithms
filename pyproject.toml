@@ -19,6 +19,7 @@ binet = "src.matrix_algorithms.lab1.binet:main"
 strassen = "src.matrix_algorithms.lab1.strassen:main"
 laderman = "src.matrix_algorithms.lab1.laderman:main"
 benchmark = "scripts.benchmark:main"
+benchmark_powers = "scripts.benchmark_powers:main"
 plot_results = "scripts.plot:main"
 
 [build-system]
