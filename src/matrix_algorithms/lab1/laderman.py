@@ -87,6 +87,9 @@ def laderman_multiply(left: Matrix, right: Matrix) -> Matrix:
 
     return _laderman_power_of_three(padded_left, padded_right)[:size, :size]
 
+def laderman_multiply_power_of_three(left: Matrix, right: Matrix) -> Matrix:
+    return _laderman_power_of_three(left, right)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Mnożenie macierzy metodą Ladermana")

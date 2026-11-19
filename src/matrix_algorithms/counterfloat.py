@@ -73,3 +73,6 @@ class CounterFloat:
 
     def __repr__(self) -> str:
         return f"CounterFloat({self.value!r})"
+
+    def __neg__(self) -> CounterFloat:
+        return type(self)(-self.value)
