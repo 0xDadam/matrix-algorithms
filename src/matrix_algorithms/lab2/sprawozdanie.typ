@@ -18,7 +18,6 @@
   #datetime.today().display("[day].[month].[year]")
 ]
 
-#pagebreak()
 = Cel i zakres ćwiczenia
 
 Celem zadania było zaimplementowanie rekurencyjnych algorytmów macierzowych:
@@ -39,6 +38,7 @@ Wszystkie operacje arytmetyczne wykonywane są na obiekcie `CounterFloat`.
 Dzięki temu osobno zliczane są dodawania, odejmowania, mnożenia i dzielenia,
 a liczba FLOP jest ich sumą.
 
+#pagebreak()
 = Opis algorytmów
 
 == Rekurencyjne odwracanie przez dopełnienie Schura
@@ -76,12 +76,14 @@ inverse_recursive(A):
         zwróć 1 / A[1,1]
     podziel A na A11, A12, A21, A22
     P := inverse_recursive(A11)
-    S := A22 - multiply(multiply(A21,P), A12)
+    p_b := multiply(P, A12)
+    c_p := multiply(A21, P)
+    S := A22 - multiply(c_p, A12)
     Q := inverse_recursive(S)
     zwróć blokową macierz:
         P + multiply(multiply(p_b,Q),c_p),
-        -multiply(multiply(P,A12),Q)
-        -multiply(multiply(Q,A21),P), Q
+        -multiply(p_b,Q)
+        -multiply(Q,c_p), Q
 ```
 
 == Rekurencyjna faktoryzacja LU
@@ -99,6 +101,7 @@ $ U = mat(U_11, U_12; 0, U_22). $
 Rozwiązywanie układów trójkątnych odbywa się iteracyjnie, natomiast
 mnożenie aktualizacji Schura wykorzystuje wybrany algorytm rekurencyjny.
 
+#pagebreak()
 == Algorytm Ladermana
 
 Laderman dzieli macierz na dziewięć bloków i wykonuje 23 rekurencyjne
@@ -111,6 +114,43 @@ czyli $T(n) = O(n^(log_3 23)) approx O(n^"2.855")$.
 Odwracanie metodą Ladermana korzysta z tego mnożenia blokowego i z
 dwublokowego wzoru Schura dla pozostałej części macierzy.
 
+== Złożoność z uwzględnieniem paddingu
+
+Niech
+
+$ p_2(n) = 2^ceil(log_2 n) quad "oraz" quad
+  p_3(n) = 3^ceil(log_3 n) $
+
+oznaczają rozmiary macierzy po dopełnieniu. To właśnie $p_2(n)$ lub
+$p_3(n)$, a nie bezpośrednio $n$, jest rozmiarem przekazywanym do
+rekurencji. Dopełnienie wymaga $Theta(p_b(n)^2)$ pamięci i pracy
+organizacyjnej, natomiast zasadnicze operacje arytmetyczne mają koszt:
+
+#table(
+  columns: (1.3fr, 2fr, 2.4fr),
+  inset: 5pt,
+  stroke: .5pt,
+  table.header([Metoda], [Rozmiar po paddingu], [Koszt mnożenia]),
+  [Binet], [$p_2(n)$], [$Theta(p_2(n)^3)$],
+  [Strassen], [$p_2(n)$], [$Theta(p_2(n)^(log_2 7))$],
+  [Laderman], [$p_3(n)$], [$Theta(p_3(n)^(log_3 23))$],
+)
+
+Dla odwracania Bineta i Strassena rekurencja zawiera dwa odwracania
+bloków oraz stałą liczbę mnożeń blokowych. Jej koszt jest więc taki jak
+koszt dominującego mnożenia: odpowiednio
+$Theta(p_2(n)^3)$ i $Theta(p_2(n)^(log_2 7))$. Odwracanie Ladermana ma
+koszt $Theta(p_3(n)^(log_3 23))$.
+
+W faktoryzacji LU występują dodatkowo iteracyjne rozwiązania układów
+trójkątnych o koszcie $Theta(p_2(n)^3)$. Dlatego dla LU Bineta koszt
+wynosi $Theta(p_2(n)^3)$, a dla LU Strassena również
+$Theta(p_2(n)^3)$, mimo że samo mnożenie Strassena ma lepszy wykładnik.
+Ponieważ $n <= p_b(n) < b n$, padding nie zmienia klasy asymptotycznej
+względem $n$, ale powoduje schodkowy przebieg czasu i liczby FLOP na
+wykresach.
+
+#pagebreak()
 = Implementacja
 
 Najważniejszy wspólny fragment odwracania:
@@ -163,6 +203,7 @@ przycinany do oryginalnego rozmiaru. Dopełnienie macierzą jednostkową dla
 odwracania zachowuje blok $A^(-1)$, ponieważ
 $ mat(A, 0; 0, I)^(-1) = mat(A^(-1), 0; 0, I) $.
 
+#pagebreak()
 = Środowisko eksperymentalne
 
 Kod źródłowy zapisano w Pythonie 3.12. Python jest językiem
@@ -187,16 +228,18 @@ Pomiary wykonano na:
   [System], [Windows],
 )
 
-Macierze losowe generowano ze stałym ziarnem, z wartościami z przedziału
-otwartego $(0.00000001, 1.0)$. Dla każdego rozmiaru mierzono czas
+Macierze losowe generowano ze stałym ziarnem, z wartościami praktycznie
+z przedziału $(0.00000001, 1.0)$ (`random.uniform` teoretycznie może
+zwrócić także końce przedziału). Dla każdego rozmiaru mierzono czas
 `time.perf_counter()`, a licznik `CounterFloat` zerowano przed pomiarem.
 
 = Wyniki
 
 Poniższe wykresy dotyczą rekurencyjnego mnożenia z pierwszego zestawu,
 które jest podstawową operacją wykorzystywaną we wszystkich algorytmach
-z tego sprawozdania. Test obejmował wszystkie rozmiary od $1$ do $100$;
-większe rozmiary przekraczały przyjęty limit czasu dla części metod.
+z tego sprawozdania. Test próbowano wykonać dla wszystkich rozmiarów od $1$ do $100$;
+algorytm Ladermana zakończył pomiary na rozmiarze $82$ po przekroczeniu
+limitu czasu, a pozostałe metody osiągnęły rozmiar $100$.
 
 #figure(
   image("czas.svg", width: 100%),
@@ -227,8 +270,8 @@ Wybrane wartości z pomiaru:
 
 Teoria zgadza się z pomiarem liczby mnożeń. Dla Bineta jest to
 $n^3$, dla Strassena $n^(log_2 7)$, a dla Ladermana
-$n^(log_3 23)$ dla rozmiarów będących odpowiednią potęgą. Dla pozostałych
-rozmiarów koszt obejmuje również dopełnienie do najbliższej potęgi.
+$n^(log_3 23)$ dla rozmiarów będących odpowiednią potęgą. Dla pozostałych rozmiarów koszt obejmuje również dopełnienie do
+najbliższej potęgi, co wyjaśnia odcinki o prawie stałym koszcie.
 
 = Sprawdzenie poprawności
 
@@ -277,9 +320,10 @@ Zaimplementowano wszystkie wymagane rekurencyjne procedury. Wspólny wzór
 Schura pozwolił użyć tych samych testów dla Bineta i Strassena, a różnice
 w liczbie operacji wynikają wyłącznie z użytego mnożenia bloków. Strassen
 wykonuje mniej mnożeń, ale dodatkowe dodawania i odejmowania powodują, że
-dla małych rozmiarów nie musi być szybszy od Bineta. Laderman ma najlepszy
-wykładnik asymptotyczny spośród trzech metod, jednak jego 23 mnożenia
-i duża liczba operacji pomocniczych powodują znaczny koszt stały.
+dla małych rozmiarów nie musi być szybszy od Bineta. Strassen ma najlepszy
+wykładnik asymptotyczny spośród trzech metod, natomiast Laderman nadal
+poprawia wykładnik klasycznego mnożenia. Jego 23 mnożenia i duża liczba
+operacji pomocniczych powodują jednak znaczny koszt stały.
 
 Wyniki potwierdzają poprawność implementacji dla testów jednostkowych,
 przykładu ręcznego i losowej macierzy $3 times 3$. Aby w pełni spełnić
