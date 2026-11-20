@@ -327,9 +327,9 @@ zwrócić także końce przedziału). Dla każdego rozmiaru mierzono czas
 Pomiary wykonano dla rekurencyjnego odwracania Bineta, Strassena i Ladermana
 oraz rekurencycznej faktoryzacji $"LU"$ metodami Bineta i Strassena.
 Badano rozmiary:
-$2, 3, 4, 8, 9, 16, 27, 32, 64, 81, 128, 243, 256$.
-Osiągnięto maksymalny rozmiar $256$ przy limicie $60$ s dla jednego pomiaru.
-Dostępne pomiary zapisano dla każdego zakończonego algorytmu.
+$2, 3, 4, 8, 9, 16, 27, 32, 64, 81, 128, 243, 256, 512$.
+Pomiary przerwano przed rozmiarem $729$. Maksymalny zapisany rozmiar
+wynosi $512$, a limity czasowe pojedynczych pomiarów wynosiły do $1200$ s.
 Dla każdego rozmiaru zliczano wszystkie operacje zmiennoprzecinkowe:
 dodawanie, odejmowanie, mnożenie i dzielenie.
 
@@ -337,24 +337,24 @@ Na wykresach nie przedstawiono mnożenia macierzy jako osobnej procedury,
 ponieważ zadanie dla tego zestawu dotyczy odwracania i faktoryzacji $"LU"$.
 
 #figure(
-  image("inverse_time.svg", width: 100%),
-  caption: [Czas rekurencyjnego odwracania. Skala liniowa.],
-) <inverse-time>
+  image("powers_inverse_time.svg", width: 100%),
+  caption: [Czas rekurencyjnego odwracania dla badanych rozmiarów potęgowych. Skala liniowa.],
+) <powers-inverse-time>
 
 #figure(
-  image("inverse_flop.svg", width: 100%),
-  caption: [Liczba FLOP dla rekurencyjnego odwracania. Skala liniowa.],
-) <inverse-flop>
+  image("powers_inverse_flop.svg", width: 100%),
+  caption: [Liczba FLOP dla rekurencyjnego odwracania dla badanych rozmiarów potęgowych. Skala liniowa.],
+) <powers-inverse-flop>
 
 #figure(
-  image("lu_time.svg", width: 100%),
-  caption: [Czas rekurencyjnej faktoryzacji $L U$. Skala liniowa.],
-) <lu-time>
+  image("powers_lu_time.svg", width: 100%),
+  caption: [Czas rekurencyjnej faktoryzacji $L U$ dla badanych rozmiarów potęgowych. Skala liniowa.],
+) <powers-lu-time>
 
 #figure(
-  image("lu_flop.svg", width: 100%),
-  caption: [Liczba FLOP dla rekurencyjnej faktoryzacji $L U$. Skala liniowa.],
-) <lu-flop>
+  image("powers_lu_flop.svg", width: 100%),
+  caption: [Liczba FLOP dla rekurencyjnej faktoryzacji $L U$ dla badanych rozmiarów potęgowych. Skala liniowa.],
+) <powers-lu-flop>
 
 
 Wybrane wartości z pomiarów odwracania i faktoryzacji $"LU"$:
@@ -364,38 +364,26 @@ Wybrane wartości z pomiarów odwracania i faktoryzacji $"LU"$:
   inset: 4pt,
   stroke: .5pt,
   table.header([Procedura], [$n$], [Czas [s]], [FLOP]),
-  [Binet -- odwracanie], [16], [0.012680], [9\,176],
-  [Strassen -- odwracanie], [16], [0.019075], [18\,829],
-  [Laderman -- odwracanie], [16], [0.092039], [98\,319],
-  [Binet -- $"LU"$], [16], [0.002838], [2\,720],
-  [Strassen -- $"LU"$], [16], [0.003810], [4\,099],
-  [Binet -- odwracanie], [32], [0.103745], [74\,928],
-  [Strassen -- odwracanie], [32], [0.139193], [145\,579],
-  [Laderman -- odwracanie], [32], [2.253333], [2\,517\,297],
-  [Binet -- $"LU"$], [32], [0.020954], [21\,824],
-  [Strassen -- $"LU"$], [32], [0.026156], [31\,917],
-  [Binet -- odwracanie], [64], [0.821902], [605\,536],
-  [Strassen -- odwracanie], [64], [1.045976], [1\,075\,789],
-  [Laderman -- odwracanie], [64], [2.219428], [2\,517\,297],
-  [Binet -- $"LU"$], [64], [0.162438], [174\,720],
-  [Strassen -- $"LU"$], [64], [0.188098], [241\,899],
-  [Binet -- odwracanie], [81], [6.768813], [4\,868\,800],
-  [Strassen -- odwracanie], [81], [7.342657], [7\,760\,731],
-  [Laderman -- odwracanie], [81], [2.261186], [2\,517\,297],
-  [Binet -- $"LU"$], [81], [1.321816], [1\,398\,016],
-  [Strassen -- $"LU"$], [81], [1.383530], [1\,811\,149],
-  [Binet -- odwracanie], [128], [6.582346], [4\,868\,800],
-  [Strassen -- odwracanie], [128], [7.138435], [7\,760\,731],
-  [Laderman -- odwracanie], [128], [53.529415], [60\,257\,847],
-  [Binet -- $"LU"$], [128], [1.318883], [1\,398\,016],
-  [Strassen -- $"LU"$], [128], [1.399518], [1\,811\,149],
-  [Binet -- odwracanie], [243], [53.489757], [39\,048\,576],
-  [Strassen -- odwracanie], [243], [51.902362], [55\,252\,477],
-  [Laderman -- odwracanie], [243], [53.721291], [60\,257\,847],
-  [Binet -- $"LU"$], [243], [10.799494], [11\,184\,640],
-  [Strassen -- $"LU"$], [243], [10.436813], [13\,499\,483],
-  [Binet -- odwracanie], [256], [55.147599], [39\,048\,576],
-  [Strassen -- odwracanie], [256], [52.154699], [55\,252\,477],
+  [Binet -- odwracanie], [128], [5.170870], [4\,868\,800],
+  [Strassen -- odwracanie], [128], [5.772661], [7\,760\,731],
+  [Laderman -- odwracanie], [128], [42.407135], [60\,257\,847],
+  [Binet -- $"LU"$], [128], [1.026586], [1\,398\,016],
+  [Strassen -- $"LU"$], [128], [1.103158], [1\,811\,149],
+  [Binet -- odwracanie], [243], [41.960235], [39\,048\,576],
+  [Strassen -- odwracanie], [243], [41.672708], [55\,252\,477],
+  [Laderman -- odwracanie], [243], [42.525465], [60\,257\,847],
+  [Binet -- $"LU"$], [243], [8.220464], [11\,184\,640],
+  [Strassen -- $"LU"$], [243], [8.127448], [13\,499\,483],
+  [Binet -- odwracanie], [256], [41.830560], [39\,048\,576],
+  [Strassen -- odwracanie], [256], [41.141860], [55\,252\,477],
+  [Laderman -- odwracanie], [256], [989.589083], [1\,407\,339\,753],
+  [Binet -- $"LU"$], [256], [8.158901], [11\,184\,640],
+  [Strassen -- $"LU"$], [256], [8.076252], [13\,499\,483],
+  [Binet -- odwracanie], [512], [336.274041], [312\,781\,568],
+  [Strassen -- odwracanie], [512], [297.053923], [390\,489\,835],
+  [Laderman -- odwracanie], [512], [991.401214], [1\,407\,339\,753],
+  [Binet -- $"LU"$], [512], [65.978810], [89\,478\,144],
+  [Strassen -- $"LU"$], [512], [59.607595], [100\,579\,325],
 )
 
 Przy rozmiarach będących potęgami liczby $2$ obserwowane wartości FLOP
@@ -510,7 +498,8 @@ tolerancji np. $10^(-10)$.
 Zaimplementowano rekurencyjne odwracanie metodami Bineta, Strassena i
 Ladermana oraz faktoryzację $"LU"$ metodami Bineta i Strassena. Wykresy
 czasowe i FLOP dotyczą właśnie tych procedur i obejmują wszystkie badane
-rozmiary potęgowe do $128$ włącznie.
+rozmiary potęgowe od $2$ do $512$ włącznie. Pomiary dla rozmiaru $729$
+nie zostały wykonane, ponieważ eksperyment przerwano przed tym rozmiarem.
 
 Wyniki potwierdzają poprawność implementacji przez dowód, przykład ręczny
 i porównanie z MATLABem na macierzy $5 times 5$. Laderman jest najwolniejszy
