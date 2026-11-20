@@ -237,19 +237,33 @@ zwrócić także końce przedziału). Dla każdego rozmiaru mierzono czas
 
 Poniższe wykresy dotyczą rekurencyjnego mnożenia z pierwszego zestawu,
 które jest podstawową operacją wykorzystywaną we wszystkich algorytmach
-z tego sprawozdania. Test próbowano wykonać dla wszystkich rozmiarów od $1$ do $100$;
-algorytm Ladermana zakończył pomiary na rozmiarze $82$ po przekroczeniu
-limitu czasu, a pozostałe metody osiągnęły rozmiar $100$.
+z tego sprawozdania. Zmierzono rozmiary będące potęgami $2$ lub $3$:
+$2, 3, 4, 8, 9, 16, 27, 32, 64, 81, 128, 243, 256, 512$.
+Pojedynczy pomiar miał limit 600 s. Binet i Strassen zakończyły pomiary
+na $n=512$, natomiast Laderman przekroczył limit przy $n=256$.
+Punkt timeout jest oznaczony na wykresie osobno i nie jest traktowany jako
+poprawny czas wykonania. Linie ciągłe łączą wyłącznie rzeczywiste punkty
+pomiarowe.
 
 #figure(
   image("czas.svg", width: 100%),
-  caption: [Czas rekurencyjnego mnożenia dla rozmiarów 1--100.],
+  caption: [Czas rekurencyjnego mnożenia z punktami rzeczywistych pomiarów. Skala jest liniowa.],
 ) <czas>
 
 #figure(
   image("flop.svg", width: 100%),
-  caption: [Liczba operacji zmiennoprzecinkowych dla rozmiarów 1--100.],
+  caption: [Liczba operacji zmiennoprzecinkowych dla udanych pomiarów. Skala jest liniowa.],
 ) <flop>
+
+#figure(
+  image("czas_log.svg", width: 100%),
+  caption: [Czas rekurencyjnego mnożenia w skali logarytmicznej dla rzeczywistych pomiarów.],
+) <czas-log>
+
+#figure(
+  image("flop_log.svg", width: 100%),
+  caption: [Liczba operacji zmiennoprzecinkowych w skali logarytmicznej dla udanych pomiarów.],
+) <flop-log>
 
 Wybrane wartości z pomiaru:
 
@@ -258,20 +272,30 @@ Wybrane wartości z pomiaru:
   inset: 4pt,
   stroke: .5pt,
   table.header([Algorytm], [$n$], [Czas [s]], [FLOP], [Mnożenia]),
-  [Binet], [4], [0.000206], [112], [64],
-  [Strassen], [4], [0.000329], [247], [49],
-  [Laderman], [9], [0.004652], [3\,665], [529],
-  [Binet], [64], [0.846127], [520\,192], [262\,144],
-  [Strassen], [64], [0.888779], [798\,967], [117\,649],
-  [Laderman], [64], [2.312968], [2\,192\,801], [279\,841],
-  [Binet], [100], [6.589653], [4\,177\,920], [2\,097\,152],
-  [Strassen], [100], [6.194633], [5\,666\,497], [823\,543],
+  [Binet], [4], [0.000291], [112], [64],
+  [Strassen], [4], [0.000411], [247], [49],
+  [Laderman], [9], [0.003624], [3\,665], [529],
+  [Binet], [64], [0.697908], [520\,192], [262\,144],
+  [Strassen], [64], [0.740104], [798\,967], [117\,649],
+  [Laderman], [64], [2.010205], [2\,192\,801], [279\,841],
+  [Binet], [128], [5.905380], [4\,177\,920], [2\,097\,152],
+  [Strassen], [128], [4.504200], [5\,666\,497], [823\,543],
+  [Laderman], [128], [38.867784], [51\,077\,401], [6\,436\,343],
+  [Binet], [243], [37.927962], [33\,488\,896], [16\,777\,216],
+  [Strassen], [243], [32.087173], [39\,960\,391], [5\,764\,801],
+  [Laderman], [243], [38.997924], [51\,077\,401], [6\,436\,343],
+  [Binet], [512], [400.942317], [268\,173\,312], [134\,217\,728],
+  [Strassen], [512], [307.714916], [280\,902\,385], [40\,353\,607],
 )
 
 Teoria zgadza się z pomiarem liczby mnożeń. Dla Bineta jest to
-$n^3$, dla Strassena $n^(log_2 7)$, a dla Ladermana
-$n^(log_3 23)$ dla rozmiarów będących odpowiednią potęgą. Dla pozostałych rozmiarów koszt obejmuje również dopełnienie do
+$p_2(n)^3$, dla Strassena $p_2(n)^(log_2 7)$, a dla Ladermana
+$p_3(n)^(log_3 23)$ dla rozmiarów będących odpowiednią potęgą. Dla pozostałych rozmiarów koszt obejmuje również dopełnienie do
 najbliższej potęgi, co wyjaśnia odcinki o prawie stałym koszcie.
+W nowych pomiarach widać to bezpośrednio: wartości dla $n=243$ i $n=256$
+mają ten sam rozmiar po paddingu dla Bineta i Strassena, a wartości dla
+$n=128$ i $n=243$ mają analogiczny wspólny koszt po paddingu dla
+Ladermana. Dla Ladermana przy $n=256$ odnotowano timeout po 600 s.
 
 = Sprawdzenie poprawności
 
