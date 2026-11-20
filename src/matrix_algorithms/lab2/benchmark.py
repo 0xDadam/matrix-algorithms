@@ -14,8 +14,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Benchmark rekurencyjnego odwracania i faktoryzacji LU"
     )
-    parser.add_argument("--max-size", type=int, default=64)
+    parser.add_argument("--max-size", type=int, default=128)
     parser.add_argument("--step", type=int, default=1)
+    parser.add_argument(
+        "--sizes",
+        type=str,
+        default="2,3,4,8,9,16,27,32,64,81,128",
+        help="Lista rozmiarów oddzielonych przecinkami",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--timeout", type=float, default=60.0)
     parser.add_argument(
@@ -51,7 +57,16 @@ def main() -> None:
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
 
-        for size in range(1, args.max_size + 1, args.step):
+        if args.sizes:
+            sizes = [
+                int(size)
+                for size in args.sizes.split(",")
+                if int(size) <= args.max_size
+            ]
+        else:
+            sizes = range(1, args.max_size + 1, args.step)
+
+        for size in sizes:
             if not any(active.values()):
                 break
 
