@@ -21,6 +21,8 @@ laderman = "src.matrix_algorithms.lab1.laderman:main"
 benchmark = "scripts.benchmark:main"
 benchmark_powers = "scripts.benchmark_powers:main"
 plot_results = "scripts.plot:main"
+benchmark_lab2 = "src.matrix_algorithms.lab2.benchmark:main"
+plot_lab2 = "src.matrix_algorithms.lab2.plot_benchmark:main"
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]

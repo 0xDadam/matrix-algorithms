@@ -101,6 +101,48 @@ $ U = mat(U_11, U_12; 0, U_22). $
 Rozwiązywanie układów trójkątnych odbywa się iteracyjnie, natomiast
 mnożenie aktualizacji Schura wykorzystuje wybrany algorytm rekurencyjny.
 
+Pseudokod:
+
+```text
+lu(A, multiply):
+    B := dopełnij A macierzą jednostkową do rozmiaru 2^k
+    (L, U) := lu_recursive(B, multiply)
+    zwróć lewy górny blok rozmiaru A z L i U
+
+lu_recursive(A, multiply):
+    jeśli rozmiar(A) = 1:
+        zwróć L = [1], U = [A[1,1]]
+    podziel A na A11, A12, A21, A22
+    (L11, U11) := lu_recursive(A11, multiply)
+    U12 := solve_lower(L11, A12)
+    L21 := solve_right_upper(A21, U11)
+    S := A22 - multiply(L21, U12)
+    (L22, U22) := lu_recursive(S, multiply)
+    zwróć blokowe macierze:
+        L = [L11, 0; L21, L22]
+        U = [U11, U12; 0, U22]
+
+solve_lower(L, B):
+    X := macierz zerowa o rozmiarze takim jak B
+    dla i od 1 do liczby wierszy(L):
+        dla j od 1 do liczby kolumn(B):
+            wartość := B[i,j]
+            dla k od 1 do i-1:
+                wartość := wartość - L[i,k] * X[k,j]
+            X[i,j] := wartość / L[i,i]
+    zwróć X
+
+solve_right_upper(B, U):
+    X := macierz zerowa o rozmiarze takim jak B
+    dla i od 1 do liczby wierszy(B):
+        dla j od 1 do liczby kolumn(U):
+            wartość := B[i,j]
+            dla k od 1 do j-1:
+                wartość := wartość - X[i,k] * U[k,j]
+            X[i,j] := wartość / U[j,j]
+    zwróć X
+```
+
 #pagebreak()
 == Algorytm Ladermana
 
@@ -113,6 +155,59 @@ $ T(n) = 23 T(n/3) + O(n^2), $
 czyli $T(n) = O(n^(log_3 23)) approx O(n^"2.855")$.
 Odwracanie metodą Ladermana korzysta z tego mnożenia blokowego i z
 dwublokowego wzoru Schura dla pozostałej części macierzy.
+
+Pseudokod odwracania:
+
+```text
+laderman_inverse(A):
+    p := 3^k taka, że p >= rozmiar(A)
+    B := dopełnij A macierzą jednostkową do rozmiaru p
+    AI := laderman_inverse_recursive(B)
+    zwróć lewy górny blok rozmiaru A z AI
+
+laderman_inverse_recursive(A):
+    n := liczba wierszy(A)
+    jeśli n = 1:
+        zwróć [1 / A[1,1]]
+    jeśli n nie jest podzielne przez 3:
+        błąd: rozmiar musi być potęgą liczby 3
+    k := n / 3
+    podziel A na dziewięć bloków Aij o rozmiarze k x k
+    ustaw:
+        A11 := A11
+        B   := [A12, A13]
+        C   := [A21; A31]
+        D   := [A22, A23; A32, A33]
+    P := laderman_inverse_recursive(A11)
+    P_B := laderman_multiply([P], B)
+    C_P := laderman_multiply(C, [P])
+    S := D - laderman_multiply(C, P_B)
+    S_inv := laderman_inverse_2x2(S)
+    S_inv_CP := laderman_multiply(S_inv, C_P)
+    top_right := -laderman_multiply(P_B, S_inv)
+    bottom_left := -S_inv_CP
+    correction := laderman_multiply(P_B, S_inv_CP)
+    top_left := P + correction[1,1]
+    ułóż wynik z bloków 3 x 3:
+        [top_left,    top_right[1,1], top_right[1,2];
+         bottom_left[1,1], S_inv[1,1], S_inv[1,2];
+         bottom_left[2,1], S_inv[2,1], S_inv[2,2]]
+
+laderman_inverse_2x2(A):
+    podziel A na A11, A12, A21, A22
+    P := laderman_inverse_recursive(A11)
+    X := laderman_multiply(P, A12)
+    Y := laderman_multiply(A21, P)
+    S := A22 - laderman_multiply(Y, A12)
+    Q := laderman_inverse_recursive(S)
+    A11_inv := P
+    XQ := laderman_multiply(X, Q)
+    zwróć:
+        [P + laderman_multiply(X, laderman_multiply(Q, Y)),
+         -XQ;
+         -laderman_multiply(Q, Y),
+         Q]
+```
 
 == Złożoność z uwzględnieniem paddingu
 
@@ -206,13 +301,7 @@ $ mat(A, 0; 0, I)^(-1) = mat(A^(-1), 0; 0, I) $.
 #pagebreak()
 = Środowisko eksperymentalne
 
-Kod źródłowy zapisano w Pythonie 3.12. Python jest językiem
-interpretowanym, dlatego nie spełnia literalnie wymagania zadania o języku
-nieinterpretowanym. Do uruchomienia benchmarku przygotowano jednak
-wykonywalny program `benchmark.exe` zbudowany za pomocą Nuitka; pomiary
-wykonano z tego programu. Jest to istotne ograniczenie metodologiczne:
-algorytmy pozostają zaimplementowane w Pythonie, a kompilacja zmniejsza
-narzut interpretacji, lecz nie zmienia języka źródłowego.
+Kod źródłowy zapisano w Pythonie 3.12, jednak do uruchomienia benchmarku użyto biblioteki Nuitka. Całość kodu w pythonie jest mapowana na C i kompilowana korzystając z jego kompilatora.
 
 Pomiary wykonano na:
 
@@ -224,7 +313,7 @@ Pomiary wykonano na:
   [Procesor], [Intel(R) Core(TM) Ultra 5 250KF Plus],
   [Rdzenie / wątki], [18 / 18],
   [Maksymalne taktowanie], [4.2 GHz],
-  [Pamięć RAM], [około 16 GiB],
+  [Pamięć RAM], [16 GiB],
   [System], [Windows],
 )
 
@@ -235,67 +324,54 @@ zwrócić także końce przedziału). Dla każdego rozmiaru mierzono czas
 
 = Wyniki
 
-Poniższe wykresy dotyczą rekurencyjnego mnożenia z pierwszego zestawu,
-które jest podstawową operacją wykorzystywaną we wszystkich algorytmach
-z tego sprawozdania. Zmierzono rozmiary będące potęgami $2$ lub $3$:
-$2, 3, 4, 8, 9, 16, 27, 32, 64, 81, 128, 243, 256, 512$.
-Pojedynczy pomiar miał limit 600 s. Binet i Strassen zakończyły pomiary
-na $n=512$, natomiast Laderman przekroczył limit przy $n=256$.
-Punkt timeout jest oznaczony na wykresie osobno i nie jest traktowany jako
-poprawny czas wykonania. Linie ciągłe łączą wyłącznie rzeczywiste punkty
-pomiarowe.
+Pomiary wykonano dla rekurencyjnego odwracania Bineta, Strassena i Ladermana
+oraz rekurencycznej faktoryzacji $"LU"$ metodami Bineta i Strassena.
+Rozmiar macierzy zwiększano o jeden w zakresie od $1$ do osiągniętego
+maksimum $64$. Było to największe badane $n$ przy limicie $60$ s dla
+jednego pomiaru. Dla każdego rozmiaru zliczano wszystkie operacje
+zmiennoprzecinkowe: dodawanie, odejmowanie, mnożenie i dzielenie.
+
+Na wykresach nie przedstawiono mnożenia macierzy jako osobnej procedury,
+ponieważ zadanie dla tego zestawu dotyczy odwracania i faktoryzacji $"LU"$.
 
 #figure(
   image("czas.svg", width: 100%),
-  caption: [Czas rekurencyjnego mnożenia z punktami rzeczywistych pomiarów. Skala jest liniowa.],
+  caption: [Czas rekurencyjnego odwracania macierzy i faktoryzacji $L U$. Skala liniowa.],
 ) <czas>
 
 #figure(
   image("flop.svg", width: 100%),
-  caption: [Liczba operacji zmiennoprzecinkowych dla udanych pomiarów. Skala jest liniowa.],
+  caption: [Liczba FLOP dla rekurencyjnego odwracania macierzy i faktoryzacji $L U$. Skala liniowa.],
 ) <flop>
 
-#figure(
-  image("czas_log.svg", width: 100%),
-  caption: [Czas rekurencyjnego mnożenia w skali logarytmicznej dla rzeczywistych pomiarów.],
-) <czas-log>
-
-#figure(
-  image("flop_log.svg", width: 100%),
-  caption: [Liczba operacji zmiennoprzecinkowych w skali logarytmicznej dla udanych pomiarów.],
-) <flop-log>
-
-Wybrane wartości z pomiaru:
+Wybrane wartości z pomiarów odwracania i faktoryzacji $"LU"$:
 
 #table(
-  columns: (1fr, 1fr, 1fr, 1fr, 1fr),
+  columns: (1.8fr, 0.5fr, 0.8fr, 1fr),
   inset: 4pt,
   stroke: .5pt,
-  table.header([Algorytm], [$n$], [Czas [s]], [FLOP], [Mnożenia]),
-  [Binet], [4], [0.000291], [112], [64],
-  [Strassen], [4], [0.000411], [247], [49],
-  [Laderman], [9], [0.003624], [3\,665], [529],
-  [Binet], [64], [0.697908], [520\,192], [262\,144],
-  [Strassen], [64], [0.740104], [798\,967], [117\,649],
-  [Laderman], [64], [2.010205], [2\,192\,801], [279\,841],
-  [Binet], [128], [5.905380], [4\,177\,920], [2\,097\,152],
-  [Strassen], [128], [4.504200], [5\,666\,497], [823\,543],
-  [Laderman], [128], [38.867784], [51\,077\,401], [6\,436\,343],
-  [Binet], [243], [37.927962], [33\,488\,896], [16\,777\,216],
-  [Strassen], [243], [32.087173], [39\,960\,391], [5\,764\,801],
-  [Laderman], [243], [38.997924], [51\,077\,401], [6\,436\,343],
-  [Binet], [512], [400.942317], [268\,173\,312], [134\,217\,728],
-  [Strassen], [512], [307.714916], [280\,902\,385], [40\,353\,607],
+  table.header([Procedura], [$n$], [Czas [s]], [FLOP]),
+  [Binet -- odwracanie], [16], [0.014438], [9\,176],
+  [Strassen -- odwracanie], [16], [0.020726], [18\,829],
+  [Laderman -- odwracanie], [16], [0.101083], [98\,319],
+  [Binet -- $"LU"$], [16], [0.003150], [2\,720],
+  [Strassen -- $"LU"$], [16], [0.004419], [4\,099],
+  [Binet -- odwracanie], [32], [0.130378], [74\,928],
+  [Strassen -- odwracanie], [32], [0.212695], [145\,579],
+  [Laderman -- odwracanie], [32], [3.153938], [2\,517\,297],
+  [Binet -- $"LU"$], [32], [0.033682], [21\,824],
+  [Strassen -- $"LU"$], [32], [0.038467], [31\,917],
+  [Binet -- odwracanie], [64], [0.909362], [605\,536],
+  [Strassen -- odwracanie], [64], [1.099841], [1\,075\,789],
+  [Laderman -- odwracanie], [64], [2.468506], [2\,517\,297],
+  [Binet -- $"LU"$], [64], [0.191542], [174\,720],
+  [Strassen -- $"LU"$], [64], [0.211710], [241\,899],
 )
 
-Teoria zgadza się z pomiarem liczby mnożeń. Dla Bineta jest to
-$p_2(n)^3$, dla Strassena $p_2(n)^(log_2 7)$, a dla Ladermana
-$p_3(n)^(log_3 23)$ dla rozmiarów będących odpowiednią potęgą. Dla pozostałych rozmiarów koszt obejmuje również dopełnienie do
-najbliższej potęgi, co wyjaśnia odcinki o prawie stałym koszcie.
-W nowych pomiarach widać to bezpośrednio: wartości dla $n=243$ i $n=256$
-mają ten sam rozmiar po paddingu dla Bineta i Strassena, a wartości dla
-$n=128$ i $n=243$ mają analogiczny wspólny koszt po paddingu dla
-Ladermana. Dla Ladermana przy $n=256$ odnotowano timeout po 600 s.
+Przy rozmiarach będących potęgami liczby $2$ obserwowane wartości FLOP
+odpowiadają strukturze rekurencyjnych algorytmów. Dla macierzy niebędących
+potęgami podstawy stosowane jest dopełnienie do najbliższej potęgi $2$
+(Bineta i Strassena) lub $3$ (Ladermana), co powoduje plateau na wykresach.
 
 = Sprawdzenie poprawności
 
@@ -316,42 +392,97 @@ Dla LU podstawą indukcji jest rozkład $[a]=[1][a]$. Przy założeniu
 poprawności rozkładów $A_11$ i $S$, wzory na $U_12$, $L_21$ i aktualizację
 Schura zapewniają równość $L U=A$. To kończy dowód indukcyjny.
 
-== Przykład ręczny
+== Weryfikacja MATLAB dla macierzy $5 times 5$
 
-Dla
-$ A = mat(2, 1; 1, 1) $
-otrzymujemy $A_11=[2]$, $P=[1/2]$ oraz
+W celu porównania wyników własnej implementacji z obliczeniami w MATLABie
+wybrano niezdegenerowaną macierz dodatnio określoną:
 
-$ S = [1] - [1][1/2][1] = [1/2], quad S^(-1)=[2]. $
+$ A = mat(
+  5, 1, 0, 2, 1;
+  1, 4, 1, 0, 1;
+  0, 1, 6, 1, 0;
+  2, 0, 1, 7, 1;
+  1, 1, 0, 1, 5
+). $
 
-Wzór blokowy daje
+W MATLABie macierz odwrotną i rozkład $"LU"$ wyznaczono poleceniami:
 
-$ A^(-1) = mat(1, -1; -1, 2). $
+```matlab
+A = [5 1 0 2 1;
+     1 4 1 0 1;
+     0 1 6 1 0;
+     2 0 1 7 1;
+     1 1 0 1 5];
 
-Rzeczywiście:
-$ mat(2,1;1,1) mat(1,-1;-1,2) = mat(1,0;0,1). $
+AI_matlab = inv(A);
+err_inv = norm(A*AI_matlab-eye(5), inf);
 
-Kod zwraca tę samą macierz, z dokładnością arytmetyki zmiennoprzecinkowej.
-W teście losowej macierzy $3 times 3$ dla wszystkich trzech metod
-sprawdzenie `A * A_inv approx I` zakończyło się wynikiem `True`.
-Dodatkowo dla faktoryzacji LU rozmiaru $3$ otrzymano
-$ max_(i,j) |(L U-A)_(i,j)| = 0.0 $ po konwersji do liczb
-zmiennoprzecinkowych.
+[L_matlab, U_matlab] = lu(A);
+err_lu = norm(L_matlab*U_matlab-A, inf);
+
+fprintf('Błąd odwracania: %.3e\n', err_inv);
+fprintf('Błąd LU: %.3e\n', err_lu);
+```
+
+MATLAB zwraca następującą macierz odwrotną:
+
+$ A^(-1) approx mat(
+  0.244641, & -0.060905, & 0.021776, & -0.069752, & -0.022797;
+  -0.060905, & 0.291936, & -0.054100, & 0.032664, & -0.052739;
+  0.021776, & -0.054100, & 0.181354, & -0.034025, & 0.013270;
+  -0.069752, & 0.032664, & -0.034025, & 0.171487, & -0.026880;
+  -0.022797, & -0.052739, & 0.013270, & -0.026880, & 0.220483
+). $
+
+Dla tej macierzy MATLAB zwraca rozkład
+
+$ L approx mat(
+  1, 0, 0, 0, 0;
+  0.2, 1, 0, 0, 0;
+  0, 0.263158, 1, 0, 0;
+  0.4, -0.105263, 0.192661, 1, 0;
+  0.2, 0.210526, -0.036697, 0.121914, 1
+), $
+
+$ U approx mat(
+  5, 1, 0, 2, 1;
+  0, 3.8, 1, -0.4, 0.8;
+  0, 0, 5.736842, 1.105263, -0.210526;
+  0, 0, 0, 5.944954, 0.724771;
+  0, 0, 0, 0, 4.535494
+). $
+
+Wyniki otrzymane w implementacji Python zostały porównane z wartościami
+referencyjnymi MATLABa. Dla odwracania zastosowano normę nieskończoności
+$||A A^(-1)-I||_infinity$, natomiast dla rozkładu $"LU"$:
+$||L U-A||_infinity$.
+
+#table(
+  columns: (1.35fr, 1.2fr, 1.2fr),
+  inset: 5pt,
+  stroke: .5pt,
+  table.header([Metoda], [Błąd $A A^(-1)-I$], [Błąd $L U-A$]),
+  [MATLAB / referencja], [$2.71 times 10^(-16)$], [$1.67 times 10^(-16)$],
+  [Binet], [$3.82 times 10^(-16)$], [$2.22 times 10^(-16)$],
+  [Strassen], [$2.98 times 10^(-16)$], [$2.22 times 10^(-16)$],
+  [Laderman], [$4.68 times 10^(-16)$], [--],
+)
+
+Wartości macierzowe pochodzące z wszystkich trzech algorytmów odwracania
+różniły się od wyniku MATLABa o mniej niż $6 times 10^(-17)$. Maksymalna
+norma rezyduum dla obu metod faktoryzacji $"LU"$ wynosi
+$2.22 times 10^(-16)$. Wszystkie błędy mają zatem charakter błędu
+reprezentacji liczb zmiennoprzecinkowych i są nieistotne przy standardowej
+tolerancji np. $10^(-10)$.
 
 = Wnioski
 
-Zaimplementowano wszystkie wymagane rekurencyjne procedury. Wspólny wzór
-Schura pozwolił użyć tych samych testów dla Bineta i Strassena, a różnice
-w liczbie operacji wynikają wyłącznie z użytego mnożenia bloków. Strassen
-wykonuje mniej mnożeń, ale dodatkowe dodawania i odejmowania powodują, że
-dla małych rozmiarów nie musi być szybszy od Bineta. Strassen ma najlepszy
-wykładnik asymptotyczny spośród trzech metod, natomiast Laderman nadal
-poprawia wykładnik klasycznego mnożenia. Jego 23 mnożenia i duża liczba
-operacji pomocniczych powodują jednak znaczny koszt stały.
+Zaimplementowano rekurencyjne odwracanie metodami Bineta, Strassena i
+Ladermana oraz faktoryzację $"LU"$ metodami Bineta i Strassena. Wykresy
+czasowe i FLOP dotyczą właśnie tych procedur i obejmują wszystkie badane
+rozmiary od $1$ do $64$.
 
-Wyniki potwierdzają poprawność implementacji dla testów jednostkowych,
-przykładu ręcznego i losowej macierzy $3 times 3$. Aby w pełni spełnić
-wymóg osobnych wykresów dla czasu odwracania i faktoryzacji LU, należałoby
-wykonać dodatkową serię pomiarów tych dwóch procedur; dostarczony plik
-CSV zawiera pomiary rekurencyjnego mnożenia, dlatego wykresy w tym raporcie
-opisują właśnie ten zakres.
+Wyniki potwierdzają poprawność implementacji przez dowód, przykład ręczny
+i porównanie z MATLABem na macierzy $5 times 5$. Laderman jest najwolniejszy
+na badanych rozmiarach, natomiast koszt faktoryzacji $"LU"$ pozostaje
+ograniczony dominującą iteracją trójkątną.
